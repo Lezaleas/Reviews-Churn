@@ -13,10 +13,5 @@ Business Problem & Key Questions
 
 | Insight | Recommendation |
 | :--- | :--- |
-| • **Delivery issues** accounted for **2/3 of customer losses** observed in the study.
-<br>• It represented the highest portion of negative feedback, appearing in 4% of all reviews.
-<br>• It correlated with the lowest repurchase rate (1.6% vs. 3.3% baseline).
-<br>• Asymmetric Impact: Positive delivery praise showed little to no effect on boosting repurchase rates.|
-• **On-time delivery is expected** by customers as a standard service; preventing delays matters far more than over-performing.
-<br>• A follow-up analysis on delivery timestamps and freight costs will help identify root causes of friction.
-<br>• Focus marketing messaging around reliability and consistent shipment. |
+| • **Delivery issues** accounted for **2/3 of customer losses** observed in the study.<br>• It represented the highest portion of negative feedback, appearing in 4% of all reviews.<br>• It correlated with the lowest repurchase rate (1.6% vs. 3.3% baseline).<br>• Asymmetric Impact: Positive delivery praise showed little to no effect on boosting repurchase rates.|
+• **On-time delivery is expected** by customers as a standard service; preventing delays matters far more than over-performing.<br>• A follow-up analysis on delivery timestamps and freight costs will help identify root causes of friction.<br>• Focus marketing messaging around reliability and consistent shipment. |
