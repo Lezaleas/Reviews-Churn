@@ -7,7 +7,7 @@ This project leverages Large Language Models (LLMs) to perform zero-shot categor
 ---
 
 **Executive Summary**
-<br>• Delivery issues were the type of negative feedback most strongly associated with customer churn. <br>• Positive feedback around product quality was strongly associated with higher repurchase rates. <br>• The overall customer repurchase rate was 3%, highlighting a significant retention challenge and raising questions about long-term customer value.
+<br>• Delivery issues were the negative feedback category most strongly associated with churn, cutting customer repurchase rates in half compared to the baseline. <br>• Positive feedback around product quality was strongly associated with higher repurchase rates. <br>• The overall customer repurchase rate was 3%, highlighting a significant retention challenge and raising questions about long-term customer value.
 
 
 ---
