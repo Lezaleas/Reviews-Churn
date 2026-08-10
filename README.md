@@ -1,1 +1,16 @@
 # Analyzing Customer Review Messages with LLMs to Identify Key Drivers of Churn and Retention
+
+Customer churn and repurchase behavior are critical metrics for business sustainability, yet unstructured qualitative data—such as customer review messages—often remains underutilized due to manual classification bottlenecks.
+
+This project leverages Large Language Models (LLMs) to perform zero-shot categorization on unstructured customer review messages in Brazilian Portuguese for Olist. By converting free-form feedback into structured categorical data, this pipeline correlates customer friction points directly with churn rate and repurchase probability, delivering actionable insights to improve retention.
+
+
+Business Problem & Key Questions
+    Unstructured Friction: What recurring topics, operational pain points, or praise themes exist in customer review text?
+    Impact on Churn and Repurchase: Which specific feedback categories exhibit the strongest correlation with user churn or repurchase?
+    Viability as a SaaS: What's the general repurchase rate for customers and what does this say about the business model at hand?
+
+
+| Insight | Recommendation |
+| :--- | :--- |
+| • **Main Cause of Churn:** Delivery issues accounted for **2/3 of customer losses** observed in the study.<br>• **Most Common Issue:** Represented the highest portion of negative feedback, appearing in **4% of all reviews**.<br>• **Impact on Retention:** Correlated with the lowest repurchase rate (**1.4% vs. 2.6% baseline**).<br>• **Asymmetric Impact:** Positive delivery praise showed little to no effect on boosting repurchase rates. | • **Address Baseline Expectations:** On-time delivery is expected as a standard service; preventing delays matters far more than over-performing.<br>• **Investigate Bottlenecks:** Conduct a follow-up analysis on delivery timestamps and freight costs to locate root causes of friction.<br>• **Position Delivery Consistency:** Focus marketing messaging around reliability and consistent fulfillment. |
