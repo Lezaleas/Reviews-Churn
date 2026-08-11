@@ -11,6 +11,8 @@ This project leverages Large Language Models (LLMs) to perform zero-shot categor
 
 ---
 
+![Negative Reviews Dashboard](pictures/Bad_Reviews.png)
+
 | Category | Insight | Recommendation |
 | :--- | :--- | :--- |
 | **Delivery Issues** | • **Strongest Churn-Associated Factor:** Accounted for **2/3 of customer losses** observed in the study.<br><br>• **Highest Negative Volume:** Represented the most common negative feedback theme and correlated with the lowest repurchase rate (**1.6% vs. 3.3% baseline**).<br><br>• **Asymmetric Impact:** Positive delivery praise showed little to no effect on boosting repurchase rates. | • **Address Baseline Expectations:** On-time delivery is expected as standard service; preventing delays matters far more than over-performing.<br><br>• **Investigate Root Causes:** A follow-up analysis on delivery timestamps and freight costs can help identify specific bottlenecks.<br><br>• **Brand Messaging:** Focus marketing copy around reliability and shipment consistency. |
