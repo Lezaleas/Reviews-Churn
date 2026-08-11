@@ -29,6 +29,8 @@ The resulting insights highlight which types of customer issues are most strongl
 
 **Methodology**
 
-[View the Technical Methodology →](METHODOLOGY.md) With detailed explanation of the data pipeline, LLM classification, SQL analysis.
+## [View the Technical Methodology →](METHODOLOGY.md)
+
+Detailed walkthrough of the data pipeline, LLM classification process, customer retention analysis, and statistical methods.
 
 ![Methodology FlowChart](pictures/Methodology_Flowchart.png)
