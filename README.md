@@ -12,6 +12,7 @@ This project leverages Large Language Models (LLMs) to perform zero-shot categor
 ---
 
 ![Negative Reviews Dashboard](pictures/Bad_Reviews.png)
+![Negative Reviews Dashboard](pictures/Good_Reviews.png)
 
 | Category | Insight | Recommendation |
 | :--- | :--- | :--- |
