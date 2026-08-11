@@ -13,7 +13,7 @@ The resulting insights highlight which types of customer issues are most strongl
 
 ---
 
-![Negative Reviews Dashboard](pictures/Bad_Reviews.png)
+![Negative Reviews Dashboard](pictures/Bad_Reviews.gif)
 ![Negative Reviews Dashboard](pictures/Good_Reviews.png)
 
 | Category | Insight | Recommendation |
