@@ -13,7 +13,7 @@ The resulting insights highlight which types of customer issues are most strongl
 
 ---
 
-[Download the Power BI Dashboard →](METHODOLOGY.md)
+[Download the Power BI Dashboard](METHODOLOGY.md)
 ![Negative Reviews Dashboard](pictures/Bad_Reviews.gif)
 ![Negative Reviews Dashboard](pictures/Good_Reviews.png)
 
@@ -29,6 +29,6 @@ The resulting insights highlight which types of customer issues are most strongl
 
 **Methodology**
 
-[View the Technical Methodology →](METHODOLOGY.md)
+[View the Technical Methodology →](METHODOLOGY.md) With detailed explanation of the data pipeline, LLM classification, SQL analysis.
 
 ![Methodology FlowChart](pictures/Methodology_Flowchart.png)
