@@ -2,7 +2,7 @@
 
 Customer churn and repurchase behavior are critical metrics for business sustainability, yet unstructured qualitative data—such as customer review messages—often remains underutilized due to manual classification bottlenecks.
 
-This project leverages Large Language Models (LLMs) to perform zero-shot categorization of unstructured customer reviews written in Brazilian Portuguese for Olist. By transforming free-form feedback into structured categories, the analysis identifies customer friction points and quantifies their relationship with churn and repurchase behavior to understand why they do—or don't—return. The resulting insights highlight which types of customer issues are most strongly associated with lost customers, providing actionable opportunities to improve retention.
+This project leverages Large Language Models (LLMs) to perform zero-shot categorization of unstructured customer reviews written in Brazilian Portuguese for Olist. By transforming free-form feedback into structured categories, the analysis identifies customer friction points and quantifies their relationship with churn and repurchase behavior to understand why they do - *or don't* — return. The resulting insights highlight which types of customer issues are most strongly associated with lost customers, providing actionable opportunities to improve retention.
 
 ---
 
