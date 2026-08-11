@@ -29,6 +29,6 @@ The resulting insights highlight which types of customer issues are most strongl
 
 **Methodology**
 
-## [View the Technical Methodology →](METHODOLOGY.md)
+### [Technical Methodology Report in Detail →](METHODOLOGY.md)
 
 ![Methodology FlowChart](pictures/Methodology_Flowchart.png)
