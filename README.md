@@ -28,4 +28,4 @@ The resulting insights highlight which types of customer issues are most strongl
 
 **Methodology**
 
-![Methodology FlowChart](pictures/Data_FlowChart.png)
+![Methodology FlowChart](pictures/Methodology_Flowchart.png)
