@@ -23,3 +23,9 @@ The resulting insights highlight which types of customer issues are most strongl
 | **Missing / Misaligned Items** | • **Secondary Churn Drivers:** These issues show moderate volume and a meaningful association with churn. | • **Checks and Audits:** Improve barcode scanning or weight checks during packaging.<br><br>• **Listing Accuracy:** Review high-return or low-rating SKUs to improve product pictures and descriptions. |
 | **Payment, Value & Price** | • **Low Volume, High Impact:** Mentions are extremely rare (<1% of reviews), but exhibit a disproportionately strong association with churn and repurchase behavior. | • **Expanded Data Sampling:** A larger dataset could confirm statistical significance and determine whether addressing these issues produces meaningful retention gains. |
 | **Cohort Retention vs. Market Benchmarks** | • **Low Baseline Retention:** **Overall repurchase rate was ~3%**, contrasting sharply with benchmarks such as Mercado Libre's reported ~11 purchases/year.<br><br>• **Early-Stage Dataset:** The dataset reflects Olist's first two years of operations (2016–2018), capturing an early logistics network and relatively low brand awareness.<br><br>• **Transactional Model:** The customer base shows a high reliance on one-off marketplace purchases rather than habituated platform usage. | • **Longitudinal Cohort Study:** Track retention curves over 12, 24, and 36-month windows as the platform matures to measure true customer lifetime value.<br><br>• **Seller Retention Incentives:** Explore cross-category bundling and loyalty programs to incentivize repeat purchases across the seller ecosystem.<br><br>• **Fix Delivery Friction:** Prioritize resolving fulfillment delays—the strongest churn-associated factor—to improve first-purchase retention. |
+
+---
+
+**Methodology**
+
+![Methodology FlowChart](pictures/Data_FlowChart.png)
