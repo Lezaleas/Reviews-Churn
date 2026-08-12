@@ -2,14 +2,14 @@
 
 Customer churn and repurchase behavior are critical metrics for business sustainability, yet unstructured qualitative data, such as customer review messages, often remains underutilized due to manual classification bottlenecks.
 
-This project leverages Large Language Models (LLMs) to perform zero-shot categorization of unstructured customer reviews written in Brazilian Portuguese for Olist. By transforming free-form feedback into structured categories, the analysis identifies customer friction points and quantifies their relationship with churn and repurchase behavior to understand why they do - *or don't* - return.
+This project leverages Large Language Models (LLMs) to perform zero-shot categorization of unstructured customer reviews written in Brazilian Portuguese for Olist. By transforming free-form feedback into structured categories such as *Delivery Delay* or *Product Missing*, the analysis identifies customer friction points and quantifies their relationship with churn and repurchase behavior to understand why they do - *or don't* - return.
 
 The resulting insights highlight which types of customer issues are most strongly associated with lost customers, providing actionable opportunities to improve retention.
 
 ---
 
 **Executive Summary**
-<br>• Delivery issues were the negative feedback category most strongly associated with churn, cutting customer repurchase rates in half compared to the baseline. <br>• Positive feedback around product quality was strongly associated with higher repurchase rates. <br>• The overall customer repurchase rate was 3%, highlighting a significant retention challenge and raising questions about long-term customer value.
+<br>• **Delivery Issues** were the negative feedback category most strongly associated with churn, cutting customer repurchase rates in half compared to the baseline. <br>• Positive feedback around **Product Quality** was strongly associated with higher repurchase rates. <br>• The overall customer repurchase rate was 3%, highlighting a significant **retention challenge** and raising questions about long-term customer value.
 
 ---
 
