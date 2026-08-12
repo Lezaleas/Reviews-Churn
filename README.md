@@ -13,7 +13,7 @@ The resulting insights highlight which types of customer issues are most strongl
 
 ---
 
-### [Download this Power BI Dashboard (.pbix)](https://raw.githubusercontent.com/Lezaleas/Reviews-Churn/main/pictures/repurchase_x_issue.pbix)
+### [Download this Power BI Dashboard ↓](https://raw.githubusercontent.com/Lezaleas/Reviews-Churn/main/pictures/repurchase_x_issue.pbix)
 ![Negative Reviews Dashboard](pictures/Bad_Reviews.gif)
 ![Negative Reviews Dashboard](pictures/Good_Reviews.png)
 
