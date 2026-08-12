@@ -3,75 +3,10 @@
 [Olist Brazilian E-Commerce Dataset](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce)
 
 # 1. Exploratory Pre-Analysis and Goal Setting
+
 During the initial exploration, it became apparent that the Portuguese review text contained potentially valuable information that was not captured by the structured review score alone. A review of existing analyses of the dataset also showed relatively limited use of the textual review content, particularly through systematic classification of the messages. This gap motivated the decision to classify the reviews into meaningful categories, with the goal of exploring information that would otherwise remain largely unused.
 
----
-
-# 2. Data Sources
-
-## 2.1 Dataset
-
-Describe the original dataset.
-
-* Source:
-* Dataset/version:
-* Number of tables:
-* Number of observations:
-* Relevant date range:
-* Original file formats:
-
-## 2.2 Relevant Tables
-
-For each table, explain:
-
-| Table         | Purpose | Key | Relevant columns |
-| ------------- | ------- | --- | ---------------- |
-| `orders`      |         |     |                  |
-| `order_items` |         |     |                  |
-| `reviews`     |         |     |                  |
-| `customers`   |         |     |                  |
-
-### 2.2.1 Relationships
-
-Explain how the tables were connected and why those relationships were appropriate.
-
-Include:
-
-* Primary/foreign keys
-* One-to-many relationships
-* Customer vs. order identifiers
-* Potential duplicate identifiers
-* Any unusual relationships discovered
-
----
-
-# 3. Data Ingestion
-
-## 3.1 Loading the Raw Data
-
-Explain:
-
-* How the data was imported
-* Tools/libraries used
-* Encoding considerations
-* Data types
-* Handling malformed rows
-* Import errors encountered
-* How import integrity was verified
-
-### Code
-
-```python
-# Relevant ingestion code
-```
-
-## 3.2 Database Structure
-
-Explain why the data was moved/stored in PostgreSQL and how the database was structured.
-
-```sql
--- Relevant table creation / loading SQL
-```
+To support this objective, the relevant data required for the analysis was identified. This included review messages and scores, the relationships necessary to associate reviews with individual customers through Reviews -> Order ID -> Customer ID -> Customer Unique ID. Order dates were also required to establish the chronological sequence of purchases and determine whether customers made subsequent purchases after a reviewed order.
 
 ---
 
