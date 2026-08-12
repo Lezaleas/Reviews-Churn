@@ -1,32 +1,9 @@
 # Technical Methodology
 
-> This document describes the technical methodology behind the analysis: data preparation, analytical decisions, statistical methods, assumptions, and implementation details. Results and business insights are intentionally excluded; those are discussed in the main project documentation.
+[Olist Brazilian E-Commerce Dataset](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce)
 
----
-
-## 1. Project Scope & Analytical Approach
-
-### 1.1 Objective
-
-Briefly describe **what the analysis was designed to measure or investigate**, without presenting the findings.
-
-* Primary analytical question:
-* Secondary questions:
-* Unit of analysis:
-* Target variable(s):
-* Relevant time period:
-* Analytical population:
-
-### 1.2 Analytical Framework
-
-Describe the overall reasoning behind the analysis.
-
-* What constitutes a customer?
-* What constitutes a purchase?
-* How is a repeat purchase defined?
-* What constitutes a review issue?
-* Which observations are considered relevant/excluded?
-* What assumptions are necessary?
+# 1. Exploratory Pre-Analysis and Goal Setting
+During the initial exploration, it became apparent that the Portuguese review text contained potentially valuable information that was not captured by the structured review score alone. A review of existing analyses of the dataset also showed relatively limited use of the textual review content, particularly through systematic classification of the messages. This gap motivated the decision to classify the reviews into meaningful categories, with the goal of exploring information that would otherwise remain largely unused.
 
 ---
 
