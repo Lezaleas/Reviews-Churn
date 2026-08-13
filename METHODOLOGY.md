@@ -13,11 +13,25 @@ To support this objective, the relevant data required for the analysis was ident
 # 2. Data Cleaning & Validation
 
 ## 4.1 General Cleaning
+<table>
+  <tr>
+    <td width="50%" valign="top">
 
-```python
-# Duplicate detection
-import os
-```
+### Feature Overview
+This module handles state synchronization across active nodes. It ensures data consistency without blocking the main event loop.
+
+- Built-in retry logic
+- Zero extra dependencies
+- Non-blocking I/O
+
+    </td>
+    <td width="50%" valign="top">
+
+```gdscript
+# Sync state handler
+func sync_state(data: Dictionary) -> void:
+    if not data.is_empty():
+        emit_signal("state_updated", data)
 
 Examples:
 
