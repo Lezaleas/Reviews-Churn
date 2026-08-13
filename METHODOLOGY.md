@@ -182,34 +182,6 @@ The resulting classified datasets were saved as two CSV files, containing the re
 
 **[View the complete Python script](./scripts/classify_reviews.py)**
 
-```python
-SYSTEM_PROMPT = """You classify Brazilian Portuguese customer reviews into the CATEGORY described in the review. Choose
-exactly ONE category from this list: OTHER, QUICK_DELIVERY, GOOD_PRODUCT_QUALITY, GOOD_PRICE, GOOD_SERVICE, EASY_PURCHASE"""
-
-response = ollama.chat(model=MODEL, messages=[{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": prompt}, ], options={"temperature": 0},)
-
-#-------------------------------------------------------------------------------------
-
-for i, row in enumerate(rows):
-    value = row.get(OUTPUT_COLUMN, "").strip()
-    if not value:
-        start_index = i    # we start on the first empty column found
-        break
-
-#-------------------------------------------------------------------------------------
-
-temp_file = INPUT_CSV + ".tmp"    # it's important to save in a temporary file to prevent waste of time by data corruption
-with open(temp_file, "w", encoding="utf-8", newline="") as f:
-    writer = csv.DictWriter(
-        f,
-        fieldnames=fieldnames,
-        extrasaction="ignore",
-    )
-    writer.writeheader()
-    writer.writerows(rows)
-os.replace(temp_file, INPUT_CSV)
-```
-
 ---
 
 
