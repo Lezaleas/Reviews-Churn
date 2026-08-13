@@ -28,11 +28,28 @@ Relevant
 
 # 4. Repurchases and Customer Purchase Histograms
 
-An order was considered to have a repurchase when the same customer had a chronologically subsequent order. Subsequent orders were included regardless of their order status, including cancelled or still-in-progress orders, since the customer is displaying interest in another purchase.
+An order was considered to have a repurchase when the same customer had a chronologically subsequent order. Subsequent orders were included regardless of their order status, including cancelled or still-in-progress orders, since the customer is displaying interest in  repurchasing.
 
-Approximately 600 orders out of 100,000 occurred at the same timestamp for the same customer, indicating bundled transactions. These orders were treated as a single purchase event. The distribution of these bundled orders was compared with the rest of the dataset and found to be broadly consistent. Therefore, only the last order in each bundle was retained for the purchase sequence, simplifying the construction of customer purchase histograms without materially altering the overall distribution.
+Approximately 600 orders out of 100,000 occurred at the same timestamp for the same customer, indicating bundled transactions. These orders were treated as a single purchase event. The distribution of these bundled orders was compared with the rest of the dataset and found to be broadly consistent. Therefore, only one order in each bundle was retained for the purchase sequence, simplifying the construction of customer purchase histograms without materially altering the overall distribution. The last order by chronological delivery date was retained, since it should better reflect customer sentiment:
+```sql
+WITH ranked_orders AS (
+    SELECT
+        order_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY customer_unique_id, order_purchase_timestamp
+            ORDER BY order_delivered_customer_date DESC NULLS LAST, order_id DESC
+        ) AS bundle_rank
+    FROM orders
+)
 
-A number was assigned to each order, numbering them in chronological order within the same customer, and was stored in a new column:
+DELETE FROM orders AS o
+USING ranked_orders AS r
+WHERE o.order_id = r.order_id
+  AND r.bundle_rank > 1;
+```
+
+
+A number was assigned to each order, ranking them in chronological order within the same customer, and was stored in a new *purchases_so_far* column:
 ```sql
 ALTER TABLE public.orders
 ADD COLUMN purchases_so_far INTEGER;
@@ -52,7 +69,7 @@ FROM numbered_orders AS n
 WHERE o.order_id = n.order_id;
 ```
 
-With our orders ranked chronologically, the amount of days passed until the next order by the same customer was stored in a new column, defaulting to null if no subsequent order happened:
+With our orders ranked chronologically, the *days_to_next_order* by the same customer was stored in a new column, defaulting to null if no subsequent order happened:
 ```sql
 ALTER TABLE public.orders
 ADD COLUMN days_to_next_order INTEGER;
@@ -73,6 +90,8 @@ SET days_to_next_order =
 FROM next_orders AS n
 WHERE o.order_id = n.order_id;
 ```
+
+A simple boolean was stored in the new *had_subsequent_order* column for easier repurchase rate calculations later, by checking for if *days_to_next_order* was null or not.
 
 Some checks were made to understand customers repurchase behavior, and to know the median time a customer will take to repurchase. It was 66 days:
 ```sql
@@ -108,8 +127,6 @@ SELECT
 FROM analysis.all
 WHERE days_to_next_order IS NOT NULL;
 ```
-
-A simple boolean was stored in the *had_subsequent_order* column for easier repurchase rate calculations later, by checking for if *days_to_next_order* was null or not.
 
 At this point it was possible to understand customer's repurchase rates, and some checks were made to improve our model. In particular, the correlation between review scores and average repurchase rate was of importance:
 | Review Score | Repurchase Rate % | Count |
