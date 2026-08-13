@@ -25,8 +25,8 @@ The Python script initially also validated the model's output against the predef
 **[View the complete Python script](./scripts/classify_reviews.py)**
 
 ```python
-SYSTEM_PROMPT = """You classify Brazilian Portuguese customer reviews into the CATEGORY described in the review. Choose exactly ONE category from this list:
-OTHER, QUICK_DELIVERY, GOOD_PRODUCT_QUALITY, GOOD_PRICE, GOOD_SERVICE, EASY_PURCHASE"""
+SYSTEM_PROMPT = """You classify Brazilian Portuguese customer reviews into the CATEGORY described in the review. Choose
+exactly ONE category from this list: OTHER, QUICK_DELIVERY, GOOD_PRODUCT_QUALITY, GOOD_PRICE, GOOD_SERVICE, EASY_PURCHASE"""
 
 response = ollama.chat(model=MODEL, messages=[{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": prompt}, ], options={"temperature": 0},)
 
