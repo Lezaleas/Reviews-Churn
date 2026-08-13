@@ -10,9 +10,60 @@ To support this objective, the relevant data required for the analysis was ident
 
 ---
 
-# 2. Data Cleaning & Validation
+# 3. Review Categorization by LLM
 
-## 4.1 General Cleaning
+About 30,000 reviews contained messages written in Brazilian Portuguese. A locally hosted LLM, accessed through Ollama, was used to classify these messages into 12 distinct categories, such as delivery not received and easy service, allowing qualitative review text to be transformed into structured data for quantitative analysis.
+
+The category taxonomy was developed manually through iterative trial runs. Initial classifications were manually inspected and the categories were progressively refined until they provided a useful balance between specificity and consistency.
+
+The initial model selected for classification produced accurate results, but its computational requirements would have resulted in an estimated processing time of approximately 20 days. A compromise was found with **Qwen2.5:3B**, which provided sufficiently high classification precision while being substantially faster and clearing the task in 2 days. Classification quality was manually checked on trial outputs before processing the full dataset.
+
+Because positive and negative reviews required different classification taxonomies, two filtered copies of the reviews table were created in PostgreSQL, containing only reviews within the respective score ranges. These tables were then exported to CSV and processed in Python. The script handled prompting the LLM with each review message, extracting the resulting category, and periodically saving checkpoints so that processing could be resumed without losing completed classifications.
+
+The Python script initially also validated the model's output against the predefined category list, since the model occasionally generated categories outside the intended taxonomy. This validation step was ultimately ignored after it became apparent that the model's occasional category variations could be more effectively consolidated into the final taxonomy in SQL.
+
+```python
+SYSTEM_PROMPT = """
+You classify Brazilian Portuguese customer reviews into the CATEGORY described in the review. Choose exactly ONE category from this list:
+OTHER, QUICK_DELIVERY, GOOD_PRODUCT_QUALITY, GOOD_PRICE, GOOD_SERVICE, EASY_PURCHASE
+"""
+response = ollama.chat(model=MODEL, messages=[{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": prompt}, ], options={"temperature": 0},)
+
+for i, row in enumerate(rows):
+    value = row.get(OUTPUT_COLUMN, "").strip()
+    if not value:
+        start_index = i    # we start on the first empty column found
+        break
+
+temp_file = INPUT_CSV + ".tmp"    # it's important to save in a temporary file to prevent waste of time by data corruption
+with open(temp_file, "w", encoding="utf-8", newline="") as f:
+    writer = csv.DictWriter(
+        f,
+        fieldnames=fieldnames,
+        extrasaction="ignore",
+    )
+    writer.writeheader()
+    writer.writerows(rows)
+os.replace(temp_file, INPUT_CSV)
+```
+
+
+
+# 2. Data Structure
+
+A new table was created with the appropriate joins as can be seen in the diagram
+
+```sql
+Relevant
+```
+
+# 3. Data Cleaning & Validation
+
+- Starting from 100k reviews, 800 of them had null review score. It was decided to discard them to not introduce ambiguity later in the analysis, after checking that they are distributed similarly to the rest of the data set.
+
+- There was a column for review message titles. The majority of them were variations on *Recomendo, Otimo, Nao Recomendo*, which hint towards general sentiment rather than specific issues. Since It's less ambiguous to get this information from review scores, this column was ignored
+
+- About 700 reviews were had duplicated order ids. This is because a customer can leave multiple reviews in the same transaction. To make things simple, it was decided to keep the last, since it's the most likely one to represent final customer sentiment.
 
 ```sql
 Relevant
