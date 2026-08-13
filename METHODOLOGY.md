@@ -13,27 +13,11 @@ To support this objective, the relevant data required for the analysis was ident
 # 2. Data Cleaning & Validation
 
 ## 4.1 General Cleaning
-<table>
-<tr>
-<td width="50%" valign="top">
 
-customer_unique_id was used as the customer-level identifier because multiple customer_id values can belong to the same underlying customer.
+```sql
+Relevant
+```
 
-</td>
-<td width="50%" valign="top">
-<p><b>SQL</b></p>
-<pre><code>
-
-SELECT
-    customer_unique_id,
-    COUNT(*) AS order_count
-FROM orders
-GROUP BY customer_unique_id;
-
-</code></pre>
-</td>
-</tr>
-</table>
 Examples:
 
 * Missing values
