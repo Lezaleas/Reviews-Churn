@@ -77,7 +77,6 @@ An order was considered to have a repurchase when the same customer had a chrono
 Approximately 700 orders out of 100,000 occurred at the same timestamp for the same customer, indicating bundled transactions. These orders were treated as a single purchase event. The distribution of these bundled orders was compared with the rest of the dataset and found to be broadly consistent. Therefore, only the last order in each bundle was retained for the purchase sequence, simplifying the construction of customer purchase histograms without materially altering the overall distribution.
 
 We then assigned a number to each order, numbering them in chronological order within the same customer
-
 ```sql
 WITH numbered_orders AS (
     SELECT
@@ -94,8 +93,8 @@ FROM numbered_orders AS n
 WHERE o.order_id = n.order_id;
 ```
 
-With our orders ranked chronological, we stored how many days passed until the next order by the same customer, defaulting to null if no subsequent order happened
 
+With our orders ranked chronological, we stored how many days passed until the next order by the same customer, defaulting to null if no subsequent order happened
 ```sql
 ALTER TABLE public.orders
 ADD COLUMN days_to_next_order INTEGER;
@@ -117,8 +116,8 @@ FROM next_orders AS n
 WHERE o.order_id = n.order_id;
 ```
 
-we now made some checks to better understand how long customers take to repurchase and to figure out the median time a customer will take to repurchase. We got that the median time to repurchase was 66 days
 
+we now made some checks to better understand how long customers take to repurchase and to figure out the median time a customer will take to repurchase. We got that the median time to repurchase was 66 days
 ```sql
 WITH ranked AS (
     SELECT
@@ -152,7 +151,7 @@ SELECT
 FROM analysis.all
 WHERE days_to_next_order IS NOT NULL;
 ```
-
+ 
 Examples:
 
 * Missing values
