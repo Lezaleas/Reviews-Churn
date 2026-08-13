@@ -172,7 +172,20 @@ FROM analysis.all
 GROUP BY review_score
 ORDER BY review_score;
 ```
- 
+
+It was initially assumed that customers will have gradual losses in repurchases as review scores got worse, but this analysis shows that a polar model between 5* reviews and 1-4* reviews adjusts customer rating behavior better. It was therefore decided that positive reviews will be those of 5*, and negative reviews those below 4*. Note that we are not calculating repurchase rate per customer, but rather by order and will keep doing it from now on.
+
+The dataset showed an unusual decline in order frequency during approximately the final two months of the observation period, with a small but persistent tail of orders. This pattern suggested that the dataset may be subject to administrative censoring near its endpoint, meaning that the apparent decline may reflect incomplete observation rather than genuine changes in purchasing behavior.
+    Since the exact point at which the data became incomplete could not be reliably determined, a cutoff date was manually selected to approximate 66 days (median repurchase estimation) before the censored period.
+    Orders after this cutoff were treated differently depending on whether a subsequent purchase had already been observed. Confirmed repurchases were retained, as they represent directly observed customer behavior and provide valuable observations for subsequent statistical analysis. Orders without a subsequent purchase were excluded, since they did not have sufficient observation time to reliably classify the customer as a non-repurchaser:
+
+```sql
+DELETE FROM analysis.all
+WHERE order_purchase_timestamp::DATE > '2018-06-01'
+  AND had_subsequent_order = FALSE;
+```
+
+
 Examples:
 
 * Missing values
