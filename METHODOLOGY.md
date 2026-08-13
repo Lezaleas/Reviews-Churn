@@ -22,7 +22,7 @@ Because positive and negative reviews required different classification taxonomi
 
 The Python script initially also validated the model's output against the predefined category list, since the model occasionally generated categories outside the intended taxonomy. This validation step was ultimately ignored after it became apparent that the model's occasional category variations could be more effectively consolidated into the final taxonomy in SQL.
 
-# [View the complete Python script](./scripts/classify_reviews.py)
+**[View the complete Python script](./scripts/classify_reviews.py)**
 
 ```python
 SYSTEM_PROMPT = """You classify Brazilian Portuguese customer reviews into the CATEGORY described in the review. Choose exactly ONE category from this list:
