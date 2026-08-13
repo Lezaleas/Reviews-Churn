@@ -10,19 +10,12 @@ To support this objective, the relevant data required for the analysis was ident
 
 ---
 
-# 4. Data Cleaning & Validation
+# 2. Data Cleaning & Validation
 
 ## 4.1 General Cleaning
 
-Document every meaningful cleaning operation.
-
-For each operation:
-
-1. What problem was identified?
-2. Why was it considered a problem?
-3. How was it handled?
-4. How many records were affected?
-5. Why was this approach chosen instead of alternatives?
+'''sql
+#some sql code here'''
 
 Examples:
 
