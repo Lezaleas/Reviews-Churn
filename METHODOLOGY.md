@@ -10,17 +10,19 @@ To support this objective, the relevant data required for the analysis was ident
 
 ---
 
-# 3. Review Categorization by LLM
+# 3. Review Categorization Using an LLM in Python
 
-About 30,000 reviews contained messages written in Brazilian Portuguese. A locally hosted LLM, accessed through Ollama, was used to classify these messages into 12 distinct categories, such as delivery not received and easy service, allowing qualitative review text to be transformed into structured data for quantitative analysis.
+**Ollama:** About 30,000 reviews contained messages written in Brazilian Portuguese. A locally hosted LLM, accessed through Ollama, was used to classify these messages into 12 distinct categories, such as delivery not received and easy service, allowing qualitative review text to be transformed into structured data for quantitative analysis.
 
 The category taxonomy was developed manually through iterative trial runs. Initial classifications were manually inspected and the categories were progressively refined until they provided a useful balance between specificity and consistency.
 
 The initial model selected for classification produced accurate results, but its computational requirements would have resulted in an estimated processing time of approximately 20 days. A compromise was found with **Qwen2.5:3B**, which provided sufficiently high classification precision while being substantially faster and clearing the task in 2 days. Classification quality was manually checked on trial outputs before processing the full dataset.
 
-Because positive and negative reviews required different classification taxonomies, two filtered copies of the reviews table were created in PostgreSQL, containing only reviews within the respective score ranges. These tables were then exported to CSV and processed in Python. The script handled prompting the LLM with each review message, extracting the resulting category, and periodically saving checkpoints so that processing could be resumed without losing completed classifications.
+**Python:** Because positive and negative reviews required different classification taxonomies, two filtered copies of the reviews table were created in PostgreSQL, containing only reviews within the respective score ranges. These tables were then exported to CSV and processed in Python. The script handled prompting the LLM with each review message, extracting the resulting category, and periodically saving checkpoints so that processing could be resumed without losing completed classifications.
 
-The Python script initially also validated the model's output against the predefined category list, since the model occasionally generated categories outside the intended taxonomy. This validation step was ultimately ignored after it became apparent that the model's occasional category variations could be more effectively consolidated into the final taxonomy in SQL.
+The Python script initially also validated the model's output against the predefined category list, since the model occasionally generated categories outside the intended taxonomy. This validation step was ultimately removed after it became apparent that these occasional category variations could be more effectively consolidated into the final taxonomy in SQL.
+
+The resulting classified datasets were saved as two CSV files, containing the review messages alongside their assigned categories. These files were then imported back into PostgreSQL using pgAdmin.
 
 **[View the complete Python script](./scripts/classify_reviews.py)**
 
@@ -52,7 +54,7 @@ with open(temp_file, "w", encoding="utf-8", newline="") as f:
 os.replace(temp_file, INPUT_CSV)
 ```
 
-
+---
 
 # 2. Data Structure
 
@@ -62,16 +64,93 @@ A new table was created with the appropriate joins as can be seen in the diagram
 Relevant
 ```
 
-# 3. Data Cleaning & Validation
+# 3. Data Cleaning & Preparation
 
-- Starting from 100k reviews, 800 of them had null review score. It was decided to discard them to not introduce ambiguity later in the analysis, after checking that they are distributed similarly to the rest of the data set.
+- Starting from 100k reviews, 800 of them had null review score. It was decided to discard them to not introduce ambiguity later in the analysis, after checking that they are distributed similarly to the rest of the data set in relevant categories.
 
 - There was a column for review message titles. The majority of them were variations on *Recomendo, Otimo, Nao Recomendo*, which hint towards general sentiment rather than specific issues. Since It's less ambiguous to get this information from review scores, this column was ignored
 
-- About 700 reviews were had duplicated order ids. This is because a customer can leave multiple reviews in the same transaction. To make things simple, it was decided to keep the last, since it's the most likely one to represent final customer sentiment.
+# 4. Repurchases and Customer Purchase Histograms
+
+An order was considered to have a repurchase when the same customer had a chronologically subsequent order. Subsequent orders were included regardless of their order status, including cancelled or still-in-progress orders, since the customer is displaying interest in another purchase.
+
+Approximately 700 orders out of 100,000 occurred at the same timestamp for the same customer, indicating bundled transactions. These orders were treated as a single purchase event. The distribution of these bundled orders was compared with the rest of the dataset and found to be broadly consistent. Therefore, only the last order in each bundle was retained for the purchase sequence, simplifying the construction of customer purchase histograms without materially altering the overall distribution.
+
+We then assigned a number to each order, numbering them in chronological order within the same customer
 
 ```sql
-Relevant
+WITH numbered_orders AS (
+    SELECT
+        order_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY customer_unique_id
+            ORDER BY order_purchase_timestamp, order_id
+        ) AS purchase_number
+    FROM orders
+)
+UPDATE orders AS o
+SET purchases_so_far = n.purchase_number
+FROM numbered_orders AS n
+WHERE o.order_id = n.order_id;
+```
+
+With our orders ranked chronological, we stored how many days passed until the next order by the same customer, defaulting to null if no subsequent order happened
+
+```sql
+ALTER TABLE public.orders
+ADD COLUMN days_to_next_order INTEGER;
+
+WITH next_orders AS (
+    SELECT
+        order_id,
+        order_purchase_timestamp,
+        LEAD(order_purchase_timestamp) OVER (
+            PARTITION BY customer_unique_id
+            ORDER BY purchases_so_far
+        ) AS next_order_timestamp
+    FROM orders )
+
+UPDATE orders AS o
+SET days_to_next_order =
+    n.next_order_timestamp::DATE - n.order_purchase_timestamp::DATE
+FROM next_orders AS n
+WHERE o.order_id = n.order_id;
+```
+
+we now made some checks to better understand how long customers take to repurchase and to figure out the median time a customer will take to repurchase. We got that the median time to repurchase was 66 days
+
+```sql
+WITH ranked AS (
+    SELECT
+        days_to_next_order,
+        NTILE(10) OVER (
+            ORDER BY days_to_next_order
+        ) AS decile
+    FROM analysis.all
+    WHERE days_to_next_order IS NOT NULL
+)
+
+SELECT
+    decile,
+    ROUND(AVG(days_to_next_order), 0) AS avg_days,
+    ROUND(
+        PERCENTILE_CONT(0.5)
+        WITHIN GROUP (ORDER BY days_to_next_order)
+    ) AS median_days,
+    COUNT(*) AS customers
+FROM ranked
+GROUP BY decile
+ORDER BY decile;
+```
+
+```sql
+SELECT
+    ROUND(
+        PERCENTILE_CONT(0.5)
+        WITHIN GROUP (ORDER BY days_to_next_order)
+    ) AS median_days
+FROM analysis.all
+WHERE days_to_next_order IS NOT NULL;
 ```
 
 Examples:
