@@ -10,52 +10,6 @@ To support this objective, the relevant data required for the analysis was ident
 
 ---
 
-# 3. Review Categorization Using an LLM in Python
-
-**Ollama:** About 30,000 reviews contained messages written in Brazilian Portuguese. A locally hosted LLM, accessed through Ollama, was used to classify these messages into 12 distinct categories, such as delivery not received and easy service, allowing qualitative review text to be transformed into structured data for quantitative analysis.
-
-The category taxonomy was developed manually through iterative trial runs. Initial classifications were manually inspected and the categories were progressively refined until they provided a useful balance between specificity and consistency.
-
-The initial model selected for classification produced accurate results, but its computational requirements would have resulted in an estimated processing time of approximately 20 days. A compromise was found with **Qwen2.5:3B**, which provided sufficiently high classification precision while being substantially faster and clearing the task in 2 days. Classification quality was manually checked on trial outputs before processing the full dataset.
-
-**Python:** Because positive and negative reviews required different classification taxonomies, two filtered copies of the reviews table were created in PostgreSQL, containing only reviews within the respective score ranges. These tables were then exported to CSV and processed in Python. The script handled prompting the LLM with each review message, extracting the resulting category, and periodically saving checkpoints so that processing could be resumed without losing completed classifications.
-
-The Python script initially also validated the model's output against the predefined category list, since the model occasionally generated categories outside the intended taxonomy. This validation step was ultimately removed after it became apparent that these occasional category variations could be more effectively consolidated into the final taxonomy in SQL.
-
-The resulting classified datasets were saved as two CSV files, containing the review messages alongside their assigned categories. These files were then imported back into PostgreSQL using pgAdmin.
-
-**[View the complete Python script](./scripts/classify_reviews.py)**
-
-```python
-SYSTEM_PROMPT = """You classify Brazilian Portuguese customer reviews into the CATEGORY described in the review. Choose
-exactly ONE category from this list: OTHER, QUICK_DELIVERY, GOOD_PRODUCT_QUALITY, GOOD_PRICE, GOOD_SERVICE, EASY_PURCHASE"""
-
-response = ollama.chat(model=MODEL, messages=[{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": prompt}, ], options={"temperature": 0},)
-
-#-------------------------------------------------------------------------------------
-
-for i, row in enumerate(rows):
-    value = row.get(OUTPUT_COLUMN, "").strip()
-    if not value:
-        start_index = i    # we start on the first empty column found
-        break
-
-#-------------------------------------------------------------------------------------
-
-temp_file = INPUT_CSV + ".tmp"    # it's important to save in a temporary file to prevent waste of time by data corruption
-with open(temp_file, "w", encoding="utf-8", newline="") as f:
-    writer = csv.DictWriter(
-        f,
-        fieldnames=fieldnames,
-        extrasaction="ignore",
-    )
-    writer.writeheader()
-    writer.writerows(rows)
-os.replace(temp_file, INPUT_CSV)
-```
-
----
-
 # 2. Data Structure
 
 A new table was created with the appropriate joins as can be seen in the diagram
@@ -69,6 +23,8 @@ Relevant
 - Starting from 100k reviews, 800 of them had null review score. It was decided to discard them to not introduce ambiguity later in the analysis, after checking that they are distributed similarly to the rest of the data set in relevant categories.
 
 - There was a column for review message titles. The majority of them were variations on *Recomendo, Otimo, Nao Recomendo*, which hint towards general sentiment rather than specific issues. Since It's less ambiguous to get this information from review scores, this column was ignored
+
+---
 
 # 4. Repurchases and Customer Purchase Histograms
 
@@ -175,9 +131,13 @@ ORDER BY review_score;
 
 It was initially assumed that customers will have gradual losses in repurchases as review scores got worse, but this analysis shows that a polar model between 5* reviews and 1-4* reviews adjusts customer rating behavior better. It was therefore decided that positive reviews will be those of 5*, and negative reviews those below 4*. Note that we are not calculating repurchase rate per customer, but rather by order and will keep doing it from now on.
 
+It was also assumed that average repurchase rate would be higher, instead of the approx 3% observed. This was noted as the first insight from the study and shaped some modeling decisions later
+
 The dataset showed an unusual decline in order frequency during approximately the final two months of the observation period, with a small but persistent tail of orders. This pattern suggested that the dataset may be subject to administrative censoring near its endpoint, meaning that the apparent decline may reflect incomplete observation rather than genuine changes in purchasing behavior.
-    Since the exact point at which the data became incomplete could not be reliably determined, a cutoff date was manually selected to approximate 66 days (median repurchase estimation) before the censored period.
-    Orders after this cutoff were treated differently depending on whether a subsequent purchase had already been observed. Confirmed repurchases were retained, as they represent directly observed customer behavior and provide valuable observations for subsequent statistical analysis. Orders without a subsequent purchase were excluded, since they did not have sufficient observation time to reliably classify the customer as a non-repurchaser:
+
+Since the exact point at which the data became incomplete could not be reliably determined, a cutoff date was manually selected to approximate 66 days (median repurchase estimation) before the start of the censored period.
+
+Orders after this cutoff were treated differently depending on whether a subsequent purchase had already been observed. Confirmed repurchases were retained, as they represent directly observed customer behavior and provide valuable observations for subsequent statistical analysis. Orders without a subsequent purchase were excluded, since they did not have sufficient observation time to reliably classify the customer as a non-repurchaser. this did not meaningfully inflate general repurchase rates:
 
 ```sql
 DELETE FROM analysis.all
@@ -185,251 +145,57 @@ WHERE order_purchase_timestamp::DATE > '2018-06-01'
   AND had_subsequent_order = FALSE;
 ```
 
+After these steps, the table had the new column **had_subsequent_order** as a way to quickly determine repurchase per order. Columns for **positive_message** & **negative_message** were added to later include review categories. It was decided to keep 2 columns instead of 1 for easier manipulation in Power BI. These 3 columns were the core columns later utilized in dashboard creation
 
-Examples:
+---
 
-* Missing values
-* Duplicate records
-* Invalid dates
-* Invalid identifiers
-* Impossible values
-* Inconsistent categories
-* Out-of-range values
-* Encoding issues
+# 5. Review Categorization Using an LLM in Python
 
-## 4.2 Missing Values
+**Ollama:** About 30,000 reviews contained messages written in Brazilian Portuguese. A locally hosted LLM, accessed through Ollama, was used to classify these messages into 12 distinct categories, such as delivery not received and easy service, allowing qualitative review text to be transformed into structured data for quantitative analysis.
 
-Explain separately how different types of missingness were handled.
+The category taxonomy was developed manually through iterative trial runs. Initial classifications were manually inspected and the categories were progressively refined until they provided a useful balance between specificity and consistency.
 
-### Missing because information was unavailable
+The initial model selected for classification produced accurate results, but its computational requirements would have resulted in an estimated processing time of approximately 20 days. A compromise was found with **Qwen2.5:3B**, which provided sufficiently high classification precision while being substantially faster and clearing the task in 2 days. Classification quality was manually checked on trial outputs before processing the full dataset.
 
-### Missing because the concept was not applicable
+**Python:** Because positive and negative reviews required different classification taxonomies, two filtered copies of the reviews table were created in PostgreSQL, containing only reviews within the respective score ranges. These tables were then exported to CSV and processed in Python. The script handled prompting the LLM with each review message, extracting the resulting category, and periodically saving checkpoints so that processing could be resumed without losing completed classifications.
 
-### Missing because of data-generation limitations
+The Python script initially also validated the model's output against the predefined category list, since the model occasionally generated categories outside the intended taxonomy. This validation step was ultimately removed after it became apparent that these occasional category variations could be more effectively consolidated into the final taxonomy in SQL.
 
-Explain why these were **not automatically treated as equivalent**.
+The resulting classified datasets were saved as two CSV files, containing the review messages alongside their assigned categories. These files were then imported back into PostgreSQL using pgAdmin.
 
-## 4.3 Duplicate Records
-
-Explain:
-
-* How duplicates were detected
-* What constituted a true duplicate
-* Whether duplicates were removed
-* Which record was retained and why
+**[View the complete Python script](./scripts/classify_reviews.py)**
 
 ```python
-# Duplicate detection
+SYSTEM_PROMPT = """You classify Brazilian Portuguese customer reviews into the CATEGORY described in the review. Choose
+exactly ONE category from this list: OTHER, QUICK_DELIVERY, GOOD_PRODUCT_QUALITY, GOOD_PRICE, GOOD_SERVICE, EASY_PURCHASE"""
+
+response = ollama.chat(model=MODEL, messages=[{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": prompt}, ], options={"temperature": 0},)
+
+#-------------------------------------------------------------------------------------
+
+for i, row in enumerate(rows):
+    value = row.get(OUTPUT_COLUMN, "").strip()
+    if not value:
+        start_index = i    # we start on the first empty column found
+        break
+
+#-------------------------------------------------------------------------------------
+
+temp_file = INPUT_CSV + ".tmp"    # it's important to save in a temporary file to prevent waste of time by data corruption
+with open(temp_file, "w", encoding="utf-8", newline="") as f:
+    writer = csv.DictWriter(
+        f,
+        fieldnames=fieldnames,
+        extrasaction="ignore",
+    )
+    writer.writeheader()
+    writer.writerows(rows)
+os.replace(temp_file, INPUT_CSV)
 ```
-
-## 4.4 Outliers / Invalid Observations
-
-Document observations that were excluded or transformed.
-
-For each exclusion:
-
-| Condition | Records affected | Treatment | Reason |
-| --------- | ---------------: | --------- | ------ |
-|           |                  |           |        |
-
-Important distinction:
-
-> An observation was excluded because it was invalid for the analytical question, not merely because it was statistically unusual.
 
 ---
 
-# 5. Defining the Analytical Population
 
-This section is particularly important because downstream statistics depend on **which observations are allowed into the analysis**.
-
-## 5.1 Inclusion Criteria
-
-Define exactly which observations qualify.
-
-```text
-Include observations where:
-- ...
-- ...
-- ...
-```
-
-## 5.2 Exclusion Criteria
-
-Document every exclusion.
-
-```text
-Exclude observations where:
-- ...
-- ...
-- ...
-```
-
-## 5.3 Consequences of Filtering
-
-Explain what each major filter changes about the population.
-
-Avoid discussing the resulting business insight; focus on methodological consequences.
-
----
-
-# 6. Customer & Purchase Identification
-
-## 6.1 Customer Identifier Choice
-
-Explain the distinction between:
-
-* `customer_id`
-* `customer_unique_id`
-
-and why one was selected for customer-level analysis.
-
-## 6.2 Order-Level vs. Customer-Level Analysis
-
-Explain when the analysis operates at:
-
-* Order level
-* Customer level
-* Review level
-* Product level
-
-and why mixing these levels could introduce bias.
-
-## 6.3 First-Purchase Identification
-
-Explain how the first purchase was determined.
-
-```python
-# Relevant code
-```
-
-Discuss:
-
-* Sorting logic
-* Ties
-* Multiple orders on the same date
-* Whether order timestamps were available
-* How ambiguous cases were handled
-
-## 6.4 Subsequent Purchase Definition
-
-Define precisely what qualifies as a repeat purchase.
-
-For example:
-
-```text
-repeat_customer =
-    customer has >= 2 qualifying orders
-```
-
-Explain why this definition was chosen.
-
----
-
-# 7. Review Classification
-
-## 7.1 Motivation
-
-Explain why review text was classified rather than relying exclusively on the existing review score.
-
-## 7.2 Classification Taxonomy
-
-Document the categories and their definitions.
-
-| Category                | Definition | Examples / boundary |
-| ----------------------- | ---------- | ------------------- |
-| `NO_ISSUE`              |            |                     |
-| `DELIVERY_DELAY`        |            |                     |
-| `DELIVERY_NOT_RECEIVED` |            |                     |
-| `DAMAGED_PRODUCT`       |            |                     |
-| `PRODUCT_QUALITY`       |            |                     |
-| `PRODUCT_DIFFERENT`     |            |                     |
-| `MISSING_ITEM`          |            |                     |
-| `PAYMENT`               |            |                     |
-| `SERVICE`               |            |                     |
-| `OTHER`                 |            |                     |
-| `UNSPECIFIED`           |            |                     |
-
-## 7.3 LLM Classification
-
-Document:
-
-* Model used
-* Model version
-* Prompt design
-* Output format
-* Temperature/settings
-* Batch processing
-* Error handling
-* Retry logic
-* Persistence/checkpointing
-
-```python
-# Classification code
-```
-
-## 7.4 Classification Rules
-
-Explain how ambiguous reviews were handled.
-
-Examples:
-
-* Multiple complaints in one review
-* Praise + complaint
-* Reviews with no meaningful text
-* Extremely short reviews
-* Sarcasm
-* Unclear responsibility
-* Reviews mentioning delivery and product simultaneously
-
-## 7.5 Classification Validation
-
-Explain how classification quality was checked.
-
-Possible methods:
-
-* Manual sample inspection
-* Confusion matrix
-* Inter-rater agreement
-* Repeated classification
-* Rule-based sanity checks
-* Category frequency checks
-
-If no formal validation was performed, explicitly state that.
-
----
-
-# 8. Feature Engineering
-
-Document every derived variable.
-
-For each feature:
-
-### `feature_name`
-
-**Definition:**
-
-**Purpose:**
-
-**Calculation:**
-
-```python
-# code
-```
-
-**Potential edge cases:**
-
-**Why this definition was chosen:**
-
-Relevant examples:
-
-* `is_first_purchase`
-* `purchases_so_far`
-* `days_since_previous_purchase`
-* `had_subsequent_order`
-* `review_category`
-* `is_repeat_customer`
-
----
 
 # 9. Statistical Methodology
 
