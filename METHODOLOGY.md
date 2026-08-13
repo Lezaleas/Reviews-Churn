@@ -14,8 +14,10 @@ To support this objective, the relevant data required for the analysis was ident
 
 ## 4.1 General Cleaning
 
-'''sql
-#some sql code here'''
+```python
+# Duplicate detection
+import os
+```
 
 Examples:
 
