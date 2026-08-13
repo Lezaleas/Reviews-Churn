@@ -33,6 +33,8 @@ func sync_state(data: Dictionary) -> void:
     if not data.is_empty():
         emit_signal("state_updated", data)
 
+    </td>
+
 Examples:
 
 * Missing values
