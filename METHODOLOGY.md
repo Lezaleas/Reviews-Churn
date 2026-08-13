@@ -14,26 +14,68 @@ To support this objective, the relevant data required for the analysis was ident
 
 ## 4.1 General Cleaning
 <table>
-  <tr>
-    <td width="50%" valign="top">
+<tr>
+<th width="50%">Methodology</th>
+<th width="50%">Implementation</th>
+</tr>
 
-### Feature Overview
-This module handles state synchronization across active nodes. It ensures data consistency without blocking the main event loop.
+<tr>
+<td valign="top">
 
-- Built-in retry logic
-- Zero extra dependencies
-- Non-blocking I/O
+### Customer identification
 
-    </td>
-    <td width="50%" valign="top">
+`customer_unique_id` was used as the customer-level identifier because multiple `customer_id` values can belong to the same underlying customer.
 
-```gdscript
-# Sync state handler
-func sync_state(data: Dictionary) -> void:
-    if not data.is_empty():
-        emit_signal("state_updated", data)```
+</td>
+<td valign="top">
 
-    </td>
+<pre><code>SELECT
+    customer_unique_id,
+    COUNT(*) AS order_count
+FROM orders
+GROUP BY customer_unique_id;</code></pre>
+
+</td>
+</tr>
+
+<tr>
+<td valign="top">
+
+### Identifying purchase order
+
+Orders were sorted chronologically within each customer. A sequential purchase number was then assigned to distinguish first purchases from subsequent purchases.
+
+</td>
+<td valign="top">
+
+<pre><code>ROW_NUMBER() OVER (
+    PARTITION BY customer_unique_id
+    ORDER BY order_purchase_timestamp
+) AS purchase_number</code></pre>
+
+</td>
+</tr>
+
+<tr>
+<td valign="top">
+
+### Repeat purchase
+
+A customer was considered a repeat customer when they had at least two qualifying orders.
+
+</td>
+<td valign="top">
+
+<pre><code>CASE
+    WHEN purchase_number > 1
+    THEN TRUE
+    ELSE FALSE
+END AS is_repeat</code></pre>
+
+</td>
+</tr>
+
+</table>
 
 Examples:
 
