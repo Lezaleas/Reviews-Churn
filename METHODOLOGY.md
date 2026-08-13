@@ -76,8 +76,11 @@ An order was considered to have a repurchase when the same customer had a chrono
 
 Approximately 700 orders out of 100,000 occurred at the same timestamp for the same customer, indicating bundled transactions. These orders were treated as a single purchase event. The distribution of these bundled orders was compared with the rest of the dataset and found to be broadly consistent. Therefore, only the last order in each bundle was retained for the purchase sequence, simplifying the construction of customer purchase histograms without materially altering the overall distribution.
 
-We then assigned a number to each order, numbering them in chronological order within the same customer
+A number was assigned to each order, numbering them in chronological order within the same customer, and was stored in a new column:
 ```sql
+ALTER TABLE public.orders
+ADD COLUMN purchases_so_far INTEGER;
+
 WITH numbered_orders AS (
     SELECT
         order_id,
@@ -93,8 +96,7 @@ FROM numbered_orders AS n
 WHERE o.order_id = n.order_id;
 ```
 
-
-With our orders ranked chronological, we stored how many days passed until the next order by the same customer, defaulting to null if no subsequent order happened
+With our orders ranked chronologically, the amount of days passed until the next order by the same customer was stored in a new column, defaulting to null if no subsequent order happened:
 ```sql
 ALTER TABLE public.orders
 ADD COLUMN days_to_next_order INTEGER;
@@ -116,8 +118,7 @@ FROM next_orders AS n
 WHERE o.order_id = n.order_id;
 ```
 
-
-we now made some checks to better understand how long customers take to repurchase and to figure out the median time a customer will take to repurchase. We got that the median time to repurchase was 66 days
+Some checks were made to understand customers repurchase behavior, and to know the median time a customer will take to repurchase. It was 66 days:
 ```sql
 WITH ranked AS (
     SELECT
@@ -150,6 +151,26 @@ SELECT
     ) AS median_days
 FROM analysis.all
 WHERE days_to_next_order IS NOT NULL;
+```
+
+A simple boolean was stored in the *had_subsequent_order* column for easier repurchase rate calculations later, by checking for if *days_to_next_order* was null or not.
+
+At this point it was possible to understand customer's repurchase rates, and some checks were made to improve our model. In particular, the correlation between review scores and average repurchase rate was of importance:
+| Review Score | Repurchase Rate % | Count |
+|---:|---:|---:|
+| 1 | 2.37 | 9650 |
+| 2 | 2.46 | 2598 |
+| 3 | 2.61 | 6749 |
+| 4 | 2.63 | 15409 |
+| 5 | 3.33 | 44675 |
+```sql
+SELECT
+    review_score,
+    ROUND(AVG(had_subsequent_order::INTEGER) * 100, 2) AS repurchase_rate,
+    COUNT(*) AS orders
+FROM analysis.all
+GROUP BY review_score
+ORDER BY review_score;
 ```
  
 Examples:
