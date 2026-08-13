@@ -24,17 +24,27 @@ To support this objective, the relevant data required for the analysis was ident
 </td>
 <td width="50%" valign="top">
 
-```sql
-SELECT
+<table>
+<tr>
+<td width="50%" valign="top">
+
+<h3>Customer identification</h3>
+
+<p><code>customer_unique_id</code> was used as the customer-level identifier because multiple <code>customer_id</code> values can belong to the same underlying customer.</p>
+
+</td>
+
+<td width="50%" valign="top">
+
+<pre><code>SELECT
     customer_unique_id,
     COUNT(*) AS order_count
 FROM orders
-GROUP BY customer_unique_id;```
+GROUP BY customer_unique_id;</code></pre>
 
 </td>
 </tr>
 </table>
-
 Examples:
 
 * Missing values
