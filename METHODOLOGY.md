@@ -31,7 +31,7 @@ This module handles state synchronization across active nodes. It ensures data c
 # Sync state handler
 func sync_state(data: Dictionary) -> void:
     if not data.is_empty():
-        emit_signal("state_updated", data)
+        emit_signal("state_updated", data)```
 
     </td>
 
