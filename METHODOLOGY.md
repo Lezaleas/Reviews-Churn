@@ -187,7 +187,7 @@ The dataset showed an unusual decline in order frequency during approximately th
 
 Since the exact point at which the data became incomplete could not be reliably determined, a cutoff date was manually selected to approximate 66 days (median repurchase estimation) before the start of the censored period.
 
-Orders after this cutoff were treated differently depending on whether a subsequent purchase had already been observed. Confirmed repurchases were retained, as they represent directly observed customer behavior and provide valuable observations for subsequent statistical analysis. Orders without a subsequent purchase were excluded, since they did not have sufficient observation time to reliably classify the customer as a non-repurchaser. this did not meaningfully inflate general repurchase rates or introduce biases:
+Orders after this cutoff were treated differently depending on whether a subsequent purchase had already been observed. Confirmed repurchases were retained, as they represent directly observed customer behavior and provide valuable observations for subsequent statistical analysis. Orders without a subsequent purchase were excluded, since they did not have sufficient observation time to reliably classify the customer as a non-repurchaser. this did not meaningfully inflate general repurchase rates or introduce biases, and helped reduce the potential biases caused by right-censoring:
 
 ```sql
 DELETE FROM analysis.all
@@ -223,7 +223,13 @@ The positive and negative messages were joined to the main table using the order
 
 # 7. Statistics and Possible Biases
 
-The following table is the result of calculating the p-value of each resulting category against the hypothesis of 2.99% repurchase rates displayed by the general population
+A minimum sample-size threshold was established to determine when a category's repurchase rate can be considered statistically precise enough for interpretation. The target was a 95% confidence range of approximately ±1 percentage point around the expected 3% repurchase rate.
+
+At a 3% repurchase rate, the standard error for 100 observations is approximately 1.7 percentage points. At 95% confidence, this produces an expected range of approximately ±3.3 percentage points. Since the margin of error decreases with the square root of the sample size, approximately 1,100 observations are required to reduce the 95% margin of error to ±1 percentage point.
+
+**A practical threshold of 1,100 observations** was therefore adopted. Categories below this threshold were not excluded, but their results should be interpreted with greater caution due to their lower statistical precision.
+
+The following table is the result of calculating the p-value of each resulting category against the hypothesis of 2.99% repurchase rate displayed by the general population:
 
 ```sql
 WITH category_stats AS (
@@ -303,3 +309,12 @@ ORDER BY p_value_vs_baseline DESC;
 | Unspecified       |           3.23% | 32,438 |         3.04% |          3.42% |                   0.02 |
 | Product Quality   |           3.98% |  6,132 |         3.49% |          4.47% |                  <0.01 |
 | Unsatisfied       |           2.54% | 34,406 |         2.38% |          2.71% |                  <0.01 |
+
+Most categories display statistically significant differences in repurchase rate compared to the 2.99% baseline. The main exception is the "Good Delivery" category, which has a large sample size of 4,695 but a high p-value of 0.94. This indicates that its 2.98% repurchase rate is effectively indistinguishable from the 2.99% baseline, likely because the true repurchase rate for this category is genuinely very close to the baseline. A similar analysis with similar results was made for the negative message categories.
+
+ Potential Biases
+- **Review reporting bias:** Customers are more likely to report issues that are easy to identify or describe, or that have a strong emotional impact. This may cause some issues to be overrepresented or underrepresented relative to their actual frequency or impact.
+- **Review-selection bias:** The customers who choose to leave reviews may differ systematically from those who do not. As a result, the analyzed reviews may not fully represent the experiences or behavior of the entire customer population.
+- **Correlation vs. causation:** The review itself is not necessarily causing the lower repurchase rate. Rather, the review category serves as an observable indicator of an underlying customer experience. Therefore, the analysis demonstrates correlation between reported issues and repurchase behavior, rather than causality.
+- **LLM classification bias:** The review categorization process introduced potential classification errors. In particular, due to computational resource limitations, each review was assigned only one category, even when a review could reasonably describe multiple issues. This may cause some categories to be overrepresented at the expense of others.
+- **Dataset timing:** The Olist database represents a relatively early period in the company's lifetime, when brand recognition was likely lower and customers had had less time to establish purchasing habits. Repurchase rates may therefore be lower than what would be expected from a more established marketplace, limiting the generalizability of the findings to later stages of the company's growth.
