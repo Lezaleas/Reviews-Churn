@@ -12,13 +12,7 @@ To support this objective, the relevant data required for the analysis was ident
 
 # 2. Data Structure
 
-A new table was created with the appropriate joins as can be seen in the diagram
-
 ![Data Structure](pictures/data_structure.webp)
-
-```sql
-Relevant
-```
 
 # 3. Data Cleaning & Preparation
 
