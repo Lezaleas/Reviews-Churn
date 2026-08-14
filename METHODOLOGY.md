@@ -213,7 +213,7 @@ The Python script initially also validated the model's output against the predef
 
 The resulting classified datasets were saved as two CSV files, containing the review messages alongside their assigned categories. These files were then imported back into PostgreSQL using pgAdmin.
 
-**[View the complete Python script](./scripts/classify_reviews.py)**
+**[View the complete Python script](./scripts/review_categorization.py)**
 
 ---
 
