@@ -181,7 +181,7 @@ ORDER BY review_score;
 
 It was initially assumed that customers will have gradual losses in repurchases as review scores got worse, but this analysis shows that a polar model between 5* reviews and 1-4* reviews adjusts customer rating behavior better. It was therefore decided that positive reviews will be those of 5*, and negative reviews those below 4*. Note that we are not calculating repurchase rate per customer, but rather by order and will keep doing it from now on.
 
-It was also assumed that average repurchase rate would be higher, instead of the approx 3% observed. This was noted as the first insight from the study and shaped some modeling decisions later
+It was also assumed that average repurchase rate would be higher, instead of the approx 3% observed. This was noted as the first insight from the study and shaped some modeling decisions later. Some checks were made to make sure nothing wrong happened to the dataset instead, such as checking if customers with over 365 days of active purchasing do exist.
 
 The dataset showed an unusual decline in order frequency during approximately the final two months of the observation period, with a small but persistent tail of orders. This pattern suggested that the dataset may be subject to administrative censoring near its endpoint, meaning that the apparent decline may reflect incomplete observation rather than genuine changes in purchasing behavior.
 
