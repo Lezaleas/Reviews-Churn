@@ -20,6 +20,41 @@ The study was conducted using a copy of the orders table as the primary analytic
 
 - Starting from 100k reviews, 800 of them had null review score. It was decided to discard them to not introduce ambiguity later in the analysis, after checking that they are distributed similarly to the rest of the data set in relevant categories.
 
+- Some reviews had duplicated order_ids. Likely because customers can give feedback more than once per order. The latest entry without an empty message was kept, since it should better reflect customer sentiment.
+
+```sql
+	SELECT review_answer_timestamp, order_id, review_comment_message
+FROM public.order_reviews
+WHERE order_id IN (
+    SELECT order_id
+    FROM public.order_reviews
+    GROUP BY order_id
+    HAVING COUNT(*) > 1
+)
+ORDER BY order_id, review_answer_timestamp desc;
+
+WITH ranked_reviews AS (
+    SELECT
+        ctid,
+        ROW_NUMBER() OVER (
+            PARTITION BY order_id
+            ORDER BY
+                CASE
+                    WHEN review_comment_message IS NOT NULL
+                         AND TRIM(review_comment_message) <> ''
+                    THEN 0
+                    ELSE 1
+                END,
+                review_answer_timestamp DESC
+        ) AS rn
+    FROM public.order_reviews
+)
+DELETE FROM public.order_reviews r
+USING ranked_reviews x
+WHERE r.ctid = x.ctid
+  AND x.rn > 1;
+```
+
 - There was a column for review message titles. The majority of them were variations on *Recomendo, Otimo, Nao Recomendo*, which hint towards general sentiment rather than specific issues. Since It's less ambiguous to get this information from review scores, this column was ignored
 
 - Approximately 600 orders out of 100,000 occurred at the same timestamp for the same customer, indicating bundled transactions. These orders were treated as a single purchase event. The distribution of these bundled orders was compared with the rest of the dataset and found to be broadly consistent. Therefore, only one order in each bundle was retained for the purchase sequence, simplifying the construction of customer purchase histograms without materially altering the overall distribution. The last order by chronological delivery date was retained, since it's associated review should reflect customer sentiment more accurately:
