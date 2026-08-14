@@ -217,390 +217,89 @@ The resulting classified datasets were saved as two CSV files, containing the re
 
 ---
 
+# 6. 
 
+The positive and negative messages were joined to the main table using the order_id relationship. Some checks were made to validate nothing broke down, such as checking all orders had a message category.
 
-# 9. Statistical Methodology
+# 7. Statistics and Possible Biases
 
-## 9.1 Descriptive Statistics
-
-Explain which statistics were used and why.
-
-Potential measures:
-
-* Mean
-* Median
-* Standard deviation
-* Percentiles
-* Count
-* Proportion
-* Rate
-
-Discuss when each measure is appropriate for the distribution being analyzed.
-
-## 9.2 Rates and Proportions
-
-Define the denominator explicitly.
-
-For example:
-
-[
-\text{Repeat Rate} =
-\frac{\text{customers with a subsequent purchase}}
-{\text{eligible customers}}
-]
-
-Explain:
-
-* Numerator
-* Denominator
-* Eligibility criteria
-* Why this denominator was chosen
-
-## 9.3 Sample Size Considerations
-
-Explain whether categories with very small sample sizes were:
-
-* Excluded
-* Grouped
-* Displayed with warnings
-* Retained but interpreted cautiously
-
-Explain the rationale.
-
-## 9.4 Uncertainty
-
-If confidence intervals or hypothesis tests are used, document:
-
-* Statistical test
-* Null hypothesis
-* Alternative hypothesis
-* Significance level
-* Confidence interval method
-* Assumptions
-* Why the test was appropriate
-
-```python
-# Statistical test
-```
-
-## 9.5 Correlation vs. Causation
-
-Explicitly describe the analytical limitations.
-
-The analysis measures associations between variables. It does not establish that a review category **causes** a subsequent purchase or loss unless an appropriate causal design is present.
-
----
-
-# 10. Handling Potential Bias
-
-Discuss methodological sources of bias.
-
-## 10.1 Selection Bias
-
-Could the analyzed customers differ systematically from excluded customers?
-
-## 10.2 Survivorship Bias
-
-Could customers who remain observable for longer have a greater opportunity to make another purchase?
-
-## 10.3 Observation Window
-
-Explain how the available time period affects the opportunity to observe repeat purchases.
-
-## 10.4 Review Bias
-
-Consider:
-
-* Who leaves reviews
-* Whether unhappy customers are more likely to leave reviews
-* Whether review text is missing
-* Whether review scores affect review behavior
-
-## 10.5 Class Imbalance
-
-Discuss whether some review categories are much more common than others and how that affects analysis.
-
----
-
-# 11. Edge Cases & Exceptions
-
-Document unusual situations explicitly.
-
-### 11.1 Multiple Orders on the Same Date
-
-### 11.2 Missing Review Text
-
-### 11.3 Customers with Multiple Identifiers
-
-### 11.4 Orders Without Reviews
-
-### 11.5 Reviews Without Valid Orders
-
-### 11.6 Extremely Small Categories
-
-### 11.7 Ambiguous Classifications
-
-### 11.8 Invalid / Impossible Values
-
-For each:
-
-**Problem → Decision → Reason → Implementation**
-
----
-
-# 12. SQL Analysis
-
-Explain why SQL was used for each stage rather than treating the SQL merely as implementation.
-
-## 12.1 Data Transformation
+The following table is the result of calculating the p-value of each resulting category against the hypothesis of 2.99% repurchase rates displayed by the general population
 
 ```sql
--- Relevant SQL
+WITH category_stats AS (
+    SELECT
+        pos_message,
+        COUNT(*) AS sample_size,
+        COUNT(*) FILTER (
+            WHERE had_subsequent_order = TRUE
+        ) AS repurchases
+    FROM analysis.all
+    WHERE pos_message IS NOT NULL
+    GROUP BY pos_message
+),
+
+calculations AS (
+    SELECT
+        pos_message,
+        sample_size,
+        repurchases,
+        repurchases::numeric / sample_size AS repurchase_rate,
+
+        SQRT(
+            (repurchases::numeric / sample_size)
+            * (1 - repurchases::numeric / sample_size)
+            / sample_size
+        ) AS standard_error,
+
+        (
+            (repurchases::numeric / sample_size) - 0.0299
+        )
+        / SQRT(
+            0.0299 * (1 - 0.0299) / sample_size
+        ) AS z_score
+
+    FROM category_stats
+)
+
+SELECT
+    pos_message,
+
+    ROUND(repurchase_rate * 100, 2) AS repurchase_rate_pct,
+
+    sample_size AS count,
+
+    ROUND(
+        (repurchase_rate - 1.96 * standard_error) * 100,
+        2
+    ) AS error_lower_pct,
+
+    ROUND(
+        (repurchase_rate + 1.96 * standard_error) * 100,
+        2
+    ) AS error_upper_pct,
+
+ROUND(
+    (
+        2 * (
+            1 - (
+                0.5 * (
+                    1 + erf(ABS(z_score) / SQRT(2))
+                )
+            )
+        )
+    )::numeric,
+    2
+) AS p_value_vs_baseline
+
+FROM calculations
+ORDER BY p_value_vs_baseline DESC;
 ```
 
-Explain:
-
-* Joins
-* CTEs
-* Aggregations
-* Window functions
-* Filtering
-* Deduplication
-
-## 12.2 Window Functions
-
-Explain any use of:
-
-```sql
-ROW_NUMBER()
-LAG()
-LEAD()
-SUM() OVER (...)
-COUNT() OVER (...)
-```
-
-and why a window function was preferable to a conventional aggregation.
-
-## 12.3 Reproducibility
-
-Explain how the SQL analysis can be reproduced from the cleaned database.
-
----
-
-# 13. Python Analysis
-
-## 13.1 Libraries
-
-| Library  | Purpose              |
-| -------- | -------------------- |
-| `pandas` | Data manipulation    |
-| `numpy`  | Numerical operations |
-| `scipy`  | Statistical analysis |
-| `...`    |                      |
-
-## 13.2 Analytical Code Structure
-
-Explain how Python was used for:
-
-* Data transformation
-* Statistical analysis
-* Classification
-* Validation
-* Exporting results
-
-```python
-# Representative analytical code
-```
-
----
-
-# 14. Power BI Data Preparation
-
-## 14.1 Data Model
-
-Explain:
-
-* Tables imported
-* Relationships
-* Granularity
-* Measures vs. calculated columns
-
-## 14.2 DAX Measures
-
-Document important measures and the reasoning behind them.
-
-```DAX
--- Measure
-```
-
-Explain:
-
-* What it calculates
-* Filter context
-* Why it was implemented as a measure
-* Any edge cases
-
-## 14.3 Filtering Logic
-
-Explain important dashboard filters and why they were implemented.
-
-Examples:
-
-* Minimum sample size
-* Review category
-* Customer population
-* Date range
-
----
-
-# 15. Quality Assurance
-
-## 15.1 Data Validation
-
-Checks performed after cleaning:
-
-* Row counts
-* Unique customer counts
-* Unique order counts
-* Null checks
-* Referential integrity
-* Date consistency
-* Category validity
-
-## 15.2 Analytical Validation
-
-Cross-check important calculations using independent methods where possible.
-
-Example:
-
-```python
-# Python calculation
-```
-
-versus
-
-```sql
--- SQL calculation
-```
-
-## 15.3 Dashboard Validation
-
-Verify that:
-
-* Totals reconcile with source data
-* Filters behave correctly
-* Percentages use the correct denominator
-* Small samples are handled correctly
-* Measures do not double-count customers
-
----
-
-# 16. Reproducibility
-
-Document the complete analytical pipeline:
-
-```text
-Raw Dataset
-     ↓
-Data Cleaning
-     ↓
-PostgreSQL
-     ↓
-Python / LLM Classification
-     ↓
-Feature Engineering
-     ↓
-SQL Analysis
-     ↓
-Power BI Dataset
-     ↓
-Dashboard
-```
-
-Include:
-
-* Required software
-* Python version
-* Database requirements
-* Dependencies
-* Environment setup
-* Execution order
-* Required files
-* Configuration variables
-
----
-
-# 17. Methodological Limitations
-
-This section should discuss **limitations of the methodology**, not the results.
-
-Potential topics:
-
-* Observational dataset
-* Limited observation window
-* Missing information
-* LLM classification uncertainty
-* Small categories
-* Customer identification limitations
-* Review-selection bias
-* Lack of experimental controls
-* Potential confounding variables
-* Measurement-definition choices
-
----
-
-# 18. Design Decisions & Alternatives Considered
-
-Document decisions where multiple reasonable approaches existed.
-
-| Decision                   | Chosen approach | Alternative | Reason |
-| -------------------------- | --------------- | ----------- | ------ |
-| Customer identifier        |                 |             |        |
-| Repeat purchase definition |                 |             |        |
-| Missing values             |                 |             |        |
-| Review classification      |                 |             |        |
-| Small samples              |                 |             |        |
-| Statistical test           |                 |             |        |
-
-This section is particularly useful for demonstrating **analytical judgment rather than merely technical implementation**.
-
----
-
-# 19. Reproducibility Checklist
-
-* [ ] Raw data can be identified
-* [ ] Cleaning steps are documented
-* [ ] Exclusions are documented
-* [ ] Derived variables are defined
-* [ ] Classification methodology is documented
-* [ ] SQL transformations are available
-* [ ] Python dependencies are documented
-* [ ] Statistical methods are documented
-* [ ] DAX measures are documented
-* [ ] Edge cases are documented
-* [ ] Validation checks are documented
-* [ ] Known limitations are documented
-
----
-
-# Appendix A — Complete SQL
-
-Include the full SQL used for the analysis, rather than only representative snippets.
-
-# Appendix B — Complete Python
-
-Include scripts that are necessary to reproduce the analytical pipeline.
-
-# Appendix C — Classification Prompt
-
-Include the final LLM prompt and output specification.
-
-# Appendix D — Data Dictionary
-
-| Field | Type | Source | Definition | Transformation |
-| ----- | ---- | ------ | ---------- | -------------- |
-|       |      |        |            |                |
-
-# Appendix E — Additional Validation
-
-Document supplementary checks that are useful for a technical reviewer but not important enough for the main methodology.
+| Category          | Repurchase Rate |  Count | Low 95% Range | High 95% Range | P-value vs 2.99% Baseline |
+| ----------------- | --------------: | -----: | ------------: | -------------: | ---------------------: |
+| Good Delivery     |           2.98% |  4,695 |         2.50% |          3.47% |                   0.94 |
+| Value/Price       |           4.24% |    283 |         1.89% |          6.59% |                   0.22 |
+| Easy/Good Service |           3.82% |  1,127 |         2.70% |          4.93% |                   0.11 |
+| Unspecified       |           3.23% | 32,438 |         3.04% |          3.42% |                   0.02 |
+| Product Quality   |           3.98% |  6,132 |         3.49% |          4.47% |                  <0.01 |
+| Unsatisfied       |           2.54% | 34,406 |         2.38% |          2.71% |                  <0.01 |
