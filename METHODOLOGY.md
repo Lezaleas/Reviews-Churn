@@ -12,7 +12,7 @@ To support this objective, the relevant data required for the analysis was ident
 
 # 2. Data Structure
 
-The study was conducted using a copy of the orders table as the primary analytical dataset. The order_reviews and customers tables were joined to it using the relationships shown in the diagram.
+The study was conducted using a copy of the orders table as the primary analytical dataset. The order_reviews and customers tables were joined to it using the relationships shown in the diagram (order_reviews had it's order_id deduplicated in a previous step).
 
 ![Data Structure](pictures/data_structure.webp)
 
