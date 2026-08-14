@@ -32,7 +32,8 @@ WHERE order_id IN (
     HAVING COUNT(*) > 1
 )
 ORDER BY order_id, review_answer_timestamp desc;
-
+```
+```sql
 WITH ranked_reviews AS (
     SELECT
         ctid,
