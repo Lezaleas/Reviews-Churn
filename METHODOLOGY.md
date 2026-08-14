@@ -14,6 +14,8 @@ To support this objective, the relevant data required for the analysis was ident
 
 A new table was created with the appropriate joins as can be seen in the diagram
 
+![Data Structure](pictures/data_structure.webp)
+
 ```sql
 Relevant
 ```
