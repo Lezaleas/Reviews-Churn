@@ -348,12 +348,78 @@ Most categories display statistically significant differences in repurchase rate
 
 # 8. Dashboard Creation
 
-```dax
-Repurchase Rate =
+The following DAX measure was created to provide a reusable repurchase rate metric throughout the dashboard:
+
+```text
+Repurchase = 
 DIVIDE(
     CALCULATE(
-        COUNTROWS(orders),
-        orders[had_subsequent_order] = TRUE()
+        COUNT('analysis all'[customer_unique_id]),
+        'analysis all'[had_subsequent_order] = TRUE()
     ),
-    COUNTROWS(orders))
+    COUNT('analysis all'[customer_unique_id]))
+```
+
+It was also important to estimate the number of customers potentially lost within each category, including customers who did not leave a review. Under the assumption that customers who left reviews and those who did not are drawn from the same underlying distribution, the following measure was used to extrapolate the observed repurchase behavior of reviewers to the broader customer population:
+
+```text
+Good Review Coverage = 
+DIVIDE(
+    CALCULATE(
+        COUNTROWS('analysis all'),
+        REMOVEFILTERS('analysis all'),
+        'analysis all'[review_score] = 5),
+    CALCULATE(
+        COUNTROWS('analysis all'),
+        REMOVEFILTERS('analysis all'),
+        'analysis all'[review_score] = 5,
+        'analysis all'[pos_message] <> "Unspecified"))
+```
+
+```text
+Estimated Repurchases Gained = 
+VAR BaselineRate =
+    CALCULATE(
+        [Repurchase],
+        'analysis all'[review_score] = 5,
+        REMOVEFILTERS('analysis all'[pos_message]))
+
+VAR HighlightRate =
+    [Repurchase]
+
+VAR AffectedCustomers =
+    DISTINCTCOUNT(
+        'analysis all'[customer_unique_id])
+
+RETURN
+    MAX(
+        0,
+        (HighlightRate - BaselineRate)
+            * AffectedCustomers
+            * [Good Review Coverage])
+```
+
+Since certain categories can be grouped into opposing positive and negative customer experiences (e.g., good delivery vs. delivery delay), the following measure was of many implemented to quantify the difference in repurchase rates between positive and negative feedback within the same category:
+
+```text
+Delta Product = 
+VAR GoodProduct =
+    CALCULATE(
+        [Repurchase],
+        'analysis all'[pos_message] = "Product Quality"
+    )
+
+VAR NegativeProduct =
+    CALCULATE(
+        [Repurchase],
+        'analysis all'[neg_message] IN {
+            "Product Damage",
+            "Product Quality",
+            "Product Mismatch",
+            "Product Missing"
+        }
+    )
+
+RETURN
+    GoodProduct - NegativeProduct
 ```
