@@ -217,9 +217,36 @@ The resulting classified datasets were saved as two CSV files, containing the re
 
 ---
 
-# 6. 
+# 6. Final Data Preparations
 
-The positive and negative messages were joined to the main table using the order_id relationship. Some checks were made to validate nothing broke down, such as checking all orders had a message category.
+For brevity, the following chapters focus on the processing and analysis of positive messages. The negative messages underwent the same general processing pipeline.
+
+The positive messages were joined to the main orders table using order_id as the linking key. Integrity checks were performed after the joins to verify that the relationships behaved as expected and that no orders were left without an assigned message category:
+```sql
+UPDATE public.orders o
+SET pos_message = p.issue_category
+FROM public.pos_messages p
+WHERE p.order_id = o.order_id;
+```
+
+The original message categories were consolidated into broader analytical categories to reduce fragmentation and improve interpretability. The mapping was performed in SQL as follows:
+```sql
+UPDATE public.orders
+SET pos_message = CASE
+    WHEN issue_category LIKE 'RECOMMEN%' THEN 'Unspecified'
+    WHEN issue_category LIKE 'SKIPPED' THEN 'Unspecified'
+    WHEN issue_category LIKE 'OTHER' THEN 'Unspecified'
+    WHEN issue_category LIKE '%PRICE%' THEN 'Value/Price'
+    WHEN issue_category LIKE '%VALUE%' THEN 'Value/Price'
+    WHEN issue_category LIKE '%SERVICE%' THEN 'Easy/Good Service'
+    WHEN issue_category LIKE '%PURCHASE%' THEN 'Easy/Good Service'
+    WHEN issue_category LIKE '%PRODUCT%' THEN 'Product Quality'
+    WHEN issue_category LIKE '%PACKAGE%' THEN 'Product Quality'
+    WHEN issue_category LIKE '%DELIVERY%' THEN 'Good Delivery'
+    ELSE pos_message
+END;
+
+```
 
 # 7. Statistics and Possible Biases
 
@@ -310,11 +337,23 @@ ORDER BY p_value_vs_baseline DESC;
 | Product Quality   |           3.98% |  6,132 |         3.49% |          4.47% |                  <0.01 |
 | Unsatisfied       |           2.54% | 34,406 |         2.38% |          2.71% |                  <0.01 |
 
-Most categories display statistically significant differences in repurchase rate compared to the 2.99% baseline. The main exception is the "Good Delivery" category, which has a large sample size of 4,695 but a high p-value of 0.94. This indicates that its 2.98% repurchase rate is effectively indistinguishable from the 2.99% baseline, likely because the true repurchase rate for this category is genuinely very close to the baseline. A similar analysis with similar results was made for the negative message categories.
+Most categories display statistically significant differences in repurchase rate compared to the 2.99% baseline. The main exception is the "Good Delivery" category, which has a large sample size of 4,695 but a high p-value of 0.94. This indicates that its 2.98% repurchase rate is effectively indistinguishable from the 2.99% general rate, likely because the true repurchase rate for this category is genuinely very close to the baseline. A similar analysis with similar results was made for the negative message categories.
 
  Potential Biases
-- **Review reporting bias:** Customers are more likely to report issues that are easy to identify or describe, or that have a strong emotional impact. This may cause some issues to be overrepresented or underrepresented relative to their actual frequency or impact.
+- **Review reporting bias:** Customers are more likely to report issues that are easy to identify or describe, or that have a strong emotional impact. This may cause some issues to be over/underrepresented relative to their actual frequency or impact.
 - **Review-selection bias:** The customers who choose to leave reviews may differ systematically from those who do not. As a result, the analyzed reviews may not fully represent the experiences or behavior of the entire customer population.
 - **Correlation vs. causation:** The review itself is not necessarily causing the lower repurchase rate. Rather, the review category serves as an observable indicator of an underlying customer experience. Therefore, the analysis demonstrates correlation between reported issues and repurchase behavior, rather than causality.
 - **LLM classification bias:** The review categorization process introduced potential classification errors. In particular, due to computational resource limitations, each review was assigned only one category, even when a review could reasonably describe multiple issues. This may cause some categories to be overrepresented at the expense of others.
 - **Dataset timing:** The Olist database represents a relatively early period in the company's lifetime, when brand recognition was likely lower and customers had had less time to establish purchasing habits. Repurchase rates may therefore be lower than what would be expected from a more established marketplace, limiting the generalizability of the findings to later stages of the company's growth.
+
+# 8. Dashboard Creation
+
+```sql
+Repurchase Rate =
+DIVIDE(
+    CALCULATE(
+        COUNTROWS(orders),
+        orders[had_subsequent_order] = TRUE()
+    ),
+    COUNTROWS(orders))
+```sql
