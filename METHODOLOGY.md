@@ -20,7 +20,7 @@ The study was conducted using a copy of the orders table as the primary analytic
 
 - Starting from 100k reviews, 800 of them had null review score. It was decided to discard them to not introduce ambiguity later in the analysis, after checking that they are distributed similarly to the rest of the data set in relevant categories.
 
-- Some reviews had duplicated order_ids. Likely because customers can give feedback more than once per order. The latest entry without an empty message was kept, since it should better reflect customer sentiment.
+- Some reviews had duplicated order_ids. Likely because customers can give feedback more than once per order. The latest entry without an empty message was kept, since it should better reflect customer sentiment. It's associated orders where later removed in a later step:
 
 ```sql
 SELECT review_answer_timestamp, order_id, review_comment_message
