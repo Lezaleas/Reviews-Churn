@@ -42,7 +42,7 @@ WHERE o.order_id = r.order_id
 
 ---
 
-# 4. Repurchases and Customer Purchase Histograms
+# 4. Repurchase Rate and Customer Purchase Histograms
 
 An order was considered to have a repurchase when the same customer had a chronologically subsequent order. Subsequent orders were included regardless of their order status, including cancelled or still-in-progress orders, since the customer is displaying interest in  repurchasing.
 
