@@ -23,7 +23,7 @@ The study was conducted using a copy of the orders table as the primary analytic
 - Some reviews had duplicated order_ids. Likely because customers can give feedback more than once per order. The latest entry without an empty message was kept, since it should better reflect customer sentiment.
 
 ```sql
-	SELECT review_answer_timestamp, order_id, review_comment_message
+SELECT review_answer_timestamp, order_id, review_comment_message
 FROM public.order_reviews
 WHERE order_id IN (
     SELECT order_id
@@ -47,8 +47,8 @@ WITH ranked_reviews AS (
                 END,
                 review_answer_timestamp DESC
         ) AS rn
-    FROM public.order_reviews
-)
+    FROM public.order_reviews)
+
 DELETE FROM public.order_reviews r
 USING ranked_reviews x
 WHERE r.ctid = x.ctid
