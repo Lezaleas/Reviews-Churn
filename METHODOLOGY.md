@@ -22,13 +22,7 @@ The study was conducted using a copy of the orders table as the primary analytic
 
 - There was a column for review message titles. The majority of them were variations on *Recomendo, Otimo, Nao Recomendo*, which hint towards general sentiment rather than specific issues. Since It's less ambiguous to get this information from review scores, this column was ignored
 
----
-
-# 4. Repurchases and Customer Purchase Histograms
-
-An order was considered to have a repurchase when the same customer had a chronologically subsequent order. Subsequent orders were included regardless of their order status, including cancelled or still-in-progress orders, since the customer is displaying interest in  repurchasing.
-
-Approximately 600 orders out of 100,000 occurred at the same timestamp for the same customer, indicating bundled transactions. These orders were treated as a single purchase event. The distribution of these bundled orders was compared with the rest of the dataset and found to be broadly consistent. Therefore, only one order in each bundle was retained for the purchase sequence, simplifying the construction of customer purchase histograms without materially altering the overall distribution. The last order by chronological delivery date was retained, since it's associated review should reflect customer sentiment more accurately:
+- Approximately 600 orders out of 100,000 occurred at the same timestamp for the same customer, indicating bundled transactions. These orders were treated as a single purchase event. The distribution of these bundled orders was compared with the rest of the dataset and found to be broadly consistent. Therefore, only one order in each bundle was retained for the purchase sequence, simplifying the construction of customer purchase histograms without materially altering the overall distribution. The last order by chronological delivery date was retained, since it's associated review should reflect customer sentiment more accurately:
 ```sql
 WITH ranked_orders AS (
     SELECT
@@ -46,6 +40,11 @@ WHERE o.order_id = r.order_id
   AND r.bundle_rank > 1;
 ```
 
+---
+
+# 4. Repurchases and Customer Purchase Histograms
+
+An order was considered to have a repurchase when the same customer had a chronologically subsequent order. Subsequent orders were included regardless of their order status, including cancelled or still-in-progress orders, since the customer is displaying interest in  repurchasing.
 
 A number was assigned to each order, ranking them in chronological order within the same customer, and was stored in a new *purchases_so_far* column:
 ```sql
