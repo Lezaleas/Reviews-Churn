@@ -14,6 +14,8 @@ To support this objective, the relevant data required for the analysis was ident
 
 ![Data Structure](pictures/data_structure.webp)
 
+The study was conducted using a copy of the orders table as the primary analytical dataset. The order_reviews and customers tables were joined to it using the relationships shown in the diagram.
+
 # 3. Data Cleaning & Preparation
 
 - Starting from 100k reviews, 800 of them had null review score. It was decided to discard them to not introduce ambiguity later in the analysis, after checking that they are distributed similarly to the rest of the data set in relevant categories.
