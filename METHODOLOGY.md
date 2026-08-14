@@ -348,7 +348,7 @@ Most categories display statistically significant differences in repurchase rate
 
 # 8. Dashboard Creation
 
-```sql
+```dax
 Repurchase Rate =
 DIVIDE(
     CALCULATE(
@@ -356,4 +356,4 @@ DIVIDE(
         orders[had_subsequent_order] = TRUE()
     ),
     COUNTROWS(orders))
-```sql
+```
