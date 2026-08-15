@@ -355,8 +355,7 @@ Repurchase =
 DIVIDE(
     CALCULATE(
         COUNT('analysis all'[customer_unique_id]),
-        'analysis all'[had_subsequent_order] = TRUE()
-    ),
+        'analysis all'[had_subsequent_order] = TRUE()),
     COUNT('analysis all'[customer_unique_id]))
 ```
 
@@ -406,8 +405,7 @@ Delta Product =
 VAR GoodProduct =
     CALCULATE(
         [Repurchase],
-        'analysis all'[pos_message] = "Product Quality"
-    )
+        'analysis all'[pos_message] = "Product Quality")
 
 VAR NegativeProduct =
     CALCULATE(
@@ -416,10 +414,10 @@ VAR NegativeProduct =
             "Product Damage",
             "Product Quality",
             "Product Mismatch",
-            "Product Missing"
-        }
-    )
+            "Product Missing"})
 
 RETURN
     GoodProduct - NegativeProduct
 ```
+
+Sliders were added to allow users to filter out categories below the recommended sampling threshold, with an explanatory message indicating the threshold used. A repurchase-rate-by-time table was considered but ultimately omitted. Because repurchases are attributed to the customer's initial purchase for the purpose of this analysis, later repurchases are associated with the date of the original order. This would create an apparent decline in repurchase rates over time that is largely an artifact of the methodology rather than a genuine temporal trend.
