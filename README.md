@@ -6,7 +6,7 @@ This project leverages Large Language Models (LLMs) to perform zero-shot categor
 
 The resulting insights highlight which types of customer issues are most strongly associated with lost customers, providing actionable opportunities to improve retention.
 
-# [Technical Methodology Report →](METHODOLOGY.md)
+### [Technical Methodology Report →](METHODOLOGY.md)
 
 ---
 
