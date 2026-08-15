@@ -12,15 +12,15 @@ To support this objective, the relevant data required for the analysis was ident
 
 # 2. Data Structure
 
-The study was conducted using a copy of the orders table as the primary analytical dataset. The order_reviews and customers tables were joined to it using the relationships shown in the diagram (order_reviews had it's order_id deduplicated in a previous step).
+The study was conducted using a copy of the *orders* table as the primary analytical dataset. The *order_reviews* and *customers* tables were joined to it using the relationships shown in the diagram. The *order_id* field in *order_reviews* had been deduplicated in a previous step to ensure that each order could be matched to a single review record.
 
 ![Data Structure](pictures/data_structure.webp)
 
 # 3. Data Cleaning & Preparation
 
-- Starting from 100k reviews, 800 of them had null review score. It was decided to discard them to not introduce ambiguity later in the analysis, after checking that they are distributed similarly to the rest of the data set in relevant categories.
+- Starting with approximately 100,000 reviews, around 800 had a NULL review score. These records were removed to avoid ambiguity in subsequent analysis, after verifying that their distribution across relevant categories was broadly consistent with the rest of the dataset.
 
-- Some reviews had duplicated order_ids. Likely because customers can give feedback more than once per order. The latest entry without an empty message was kept, since it should better reflect customer sentiment. It's associated orders where later removed in a later step:
+- Some reviews contained duplicated *order_id* values, likely because customers could submit feedback more than once per order. When duplicates were found, entries containing a non-empty review message were prioritized, with the most recent qualifying entry retained. The associated orders were subsequently removed in a later step:
 
 ```sql
 SELECT review_answer_timestamp, order_id, review_comment_message
@@ -56,7 +56,7 @@ WHERE r.ctid = x.ctid
   AND x.rn > 1;
 ```
 
-- There was a column for review message titles. The majority of them were variations on *Recomendo, Otimo, Nao Recomendo*, which hint towards general sentiment rather than specific issues. Since It's less ambiguous to get this information from review scores, this column was ignored
+- A column containing review message titles was also available. The majority of entries consisted of variations of "Recomendo", "Ótimo", and "Não Recomendo", which primarily indicate general sentiment rather than specific issues. Since this information could be captured less ambiguously through the review score, the column was excluded from the analysis.
 
 - Approximately 600 orders out of 100,000 occurred at the same timestamp for the same customer, indicating bundled transactions. These orders were treated as a single purchase event. The distribution of these bundled orders was compared with the rest of the dataset and found to be broadly consistent. Therefore, only one order in each bundle was retained for the purchase sequence, simplifying the construction of customer purchase histograms without materially altering the overall distribution. The last order by chronological delivery date was retained, since it's associated review should reflect customer sentiment more accurately:
 ```sql
@@ -80,9 +80,10 @@ WHERE o.order_id = r.order_id
 
 # 4. Repurchase Rate and Customer Purchase Histograms
 
-An order was considered to have a repurchase when the same customer had a chronologically subsequent order. Subsequent orders were included regardless of their order status, including cancelled or still-in-progress orders, since the customer is displaying interest in  repurchasing.
+An order was considered to have a subsequent repurchase when the same customer placed a chronologically later order. Subsequent orders were included regardless of their order status, including cancelled or still-in-progress orders, as the act of placing another order was considered an indication of continued purchasing intent.
 
-A number was assigned to each order, ranking them in chronological order within the same customer, and was stored in a new *purchases_so_far* column:
+Each order was then assigned a sequential number based on its chronological position within the same customer. This value was stored in a new *purchases_so_far* column.
+
 ```sql
 ALTER TABLE public.orders
 ADD COLUMN purchases_so_far INTEGER;
@@ -102,7 +103,8 @@ FROM numbered_orders AS n
 WHERE o.order_id = n.order_id;
 ```
 
-With our orders ranked chronologically, the *days_to_next_order* by the same customer was stored in a new column, defaulting to null if no subsequent order happened:
+With orders ranked chronologically for each customer, the number of days until the customer's next order was calculated and stored in a new *days_to_next_order column*. The value was left as NULL when no subsequent order was observed.
+
 ```sql
 ALTER TABLE public.orders
 ADD COLUMN days_to_next_order INTEGER;
@@ -124,9 +126,9 @@ FROM next_orders AS n
 WHERE o.order_id = n.order_id;
 ```
 
-A simple boolean was stored in the new *had_subsequent_order* column for easier repurchase rate calculations later, by checking for if *days_to_next_order* was null or not.
+A boolean variable, *had_subsequent_order*, was added to simplify subsequent repurchase-rate calculations. It was derived from *days_to_next_order*, with a value of TRUE when a subsequent order was observed and FALSE when the value was null.
 
-Some checks were made to understand customers repurchase behavior, and to know the median time a customer will take to repurchase. It was 66 days:
+Additional checks were performed to better understand customer repurchase behavior, including the time elapsed between purchases. The median time to a subsequent purchase was found to be 66 days.
 ```sql
 WITH ranked AS (
     SELECT
@@ -161,7 +163,8 @@ FROM analysis.all
 WHERE days_to_next_order IS NOT NULL;
 ```
 
-At this point it was possible to understand customer's repurchase rates, and some checks were made to improve our model. In particular, the correlation between review scores and average repurchase rate was of importance:
+At this stage, it was possible to assess customer repurchase rates and perform additional checks to validate the analysis. In particular, the relationship between review scores and average repurchase rates was examined:
+
 | Review Score | Repurchase Rate % | Count |
 |---:|---:|---:|
 | 1 | 2.37 | 9650 |
@@ -179,9 +182,9 @@ GROUP BY review_score
 ORDER BY review_score;
 ```
 
-It was initially assumed that customers will have gradual losses in repurchases as review scores got worse, but this analysis shows that a polar model between 5* reviews and 1-4* reviews adjusts customer rating behavior better. It was therefore decided that positive reviews will be those of 5*, and negative reviews those below 4*. Note that we are not calculating repurchase rate per customer, but rather by order and will keep doing it from now on.
+It was initially assumed that repurchase rates would decline gradually as review scores decreased. However, the analysis showed that a binary distinction between 5-star reviews and reviews below 4 stars provided a better representation of the observed customer behavior. Positive reviews were therefore defined as 5-star reviews, while negative reviews were defined as reviews below 4 stars. Throughout the analysis, repurchase rate is calculated at the order level rather than the customer level.
 
-It was also assumed that average repurchase rate would be higher, instead of the approx 3% observed. This was noted as the first insight from the study and shaped some modeling decisions later. Some checks were made to make sure nothing wrong happened to the dataset instead, such as checking if customers with over 365 days of active purchasing do exist.
+The observed overall repurchase rate of approximately 3% was also substantially lower than initially expected. This became the first major insight of the study and influenced several subsequent modeling decisions. Additional checks were performed to determine whether this result could instead be attributed to issues within the dataset, including verifying that customers with more than 365 days of purchasing activity were present.
 
 The dataset showed an unusual decline in order frequency during approximately the final two months of the observation period, with a small but persistent tail of orders. This pattern suggested that the dataset may be subject to administrative censoring near its endpoint, meaning that the apparent decline may reflect incomplete observation rather than genuine changes in purchasing behavior.
 
@@ -420,6 +423,10 @@ RETURN
     GoodProduct - NegativeProduct
 ```
 
-Sliders were added to allow users to filter out categories below the recommended sampling threshold, with an explanatory message indicating the threshold used. A repurchase-rate-by-time table was considered but ultimately omitted. Because repurchases are attributed to the customer's initial purchase for the purpose of this analysis, later repurchases are associated with the date of the original order. This would create an apparent decline in repurchase rates over time that is largely an artifact of the methodology rather than a genuine temporal trend.
+Sliders were added to allow users to filter out categories below the recommended sampling threshold, accompanied by an explanatory message indicating the threshold used.
+
+A repurchase-rate-by-time table was considered but ultimately omitted. Because repurchases are attributed to the customer's initial purchase for the purposes of this analysis, subsequent repurchases are associated with the date of the original order. As a result, a temporal visualization would produce an apparent decline in repurchase rates that is largely an artifact of the methodology rather than a genuine trend.
+
+Analysis of additional relationships, such as repurchase rate by state or product, was outside the scope of this project. However, these dimensions could be incorporated in future analyses if they provide meaningful additional insight into the factors associated with customer retention.
 
 [← View Results](README.md)
