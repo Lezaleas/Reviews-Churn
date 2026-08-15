@@ -1,4 +1,4 @@
-# Identifying Drivers of Churn and Retention by Analyzing Reviews with LLMs
+<h1 align="center">Identifying Drivers of Churn and Retention by Analyzing Reviews with LLMs</h1>
 
 Customer churn and repurchase behavior are critical metrics for business sustainability, yet unstructured qualitative data, such as customer review messages, often remains underutilized due to manual classification bottlenecks.
 
